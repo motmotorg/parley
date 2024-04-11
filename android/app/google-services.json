@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "209496617956",
+    "project_id": "parley-motmot",
+    "storage_bucket": "parley-motmot.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209496617956:android:405f9b27f983eadea80df1",
+        "android_client_info": {
+          "package_name": "com.parley.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7hmgVr1cT26O-rJZjpoW849PBaujv9JA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
