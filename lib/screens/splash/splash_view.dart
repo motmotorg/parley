@@ -1,6 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:parley/controllers/auth_controller.dart';
+import 'package:parley/screens/auth/login_view.dart';
 import 'package:parley/screens/auth/signUp_view.dart';
+import 'package:parley/screens/home/home_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -15,12 +19,14 @@ class _SplashViewState extends State<SplashView> {
     Future.delayed(
       const Duration(
         seconds: 1
-      ), () {
-        Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                            builder: (ctx) => const SignUpView()));
+      ), () async {
+      await AuthController().checkAuth();
+      if (AuthController().userData == null) {
+        Get.offAll(const LoginView());
+      } else {
+        Get.offAll(const HomeView());
       }
+    }
     );
     super.initState();
   }

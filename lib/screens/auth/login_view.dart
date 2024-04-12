@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:parley/constant.dart';
-import 'package:parley/controllers/simple_ui_controller.dart';
+import 'package:parley/controllers/auth_controller.dart';
+import 'package:parley/controllers/auth_ui_controller.dart';
+import 'package:parley/screens/auth/signUp_view.dart';
+import 'package:parley/screens/home/home_view.dart';
 
 
 class LoginView extends StatefulWidget {
@@ -14,15 +17,15 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
+  AuthUIController authUIController = Get.put(AuthUIController());
+
   @override
   void dispose() {
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -31,7 +34,6 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    SimpleUIController simpleUIController = Get.find<SimpleUIController>();
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
@@ -64,7 +66,7 @@ class _LoginViewState extends State<LoginView> {
               Padding(
                 padding: const EdgeInsets.only(left: 20.0),
                 child: Text(
-                  'Welcome Back Catchy',
+                  'Welcome Back Parley',
                   style: kLoginSubtitleStyle(size),
                 ),
               ),
@@ -77,25 +79,28 @@ class _LoginViewState extends State<LoginView> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      /// username or Gmail
+                      /// Email
                       TextFormField(
                         style: kTextFormFieldStyle(),
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.person),
-                          hintText: 'Username or Gmail',
+                          hintText: 'Email',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
-                        controller: nameController,
+                        controller: emailController,
                         // The validator receives the text that the user has entered.
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter username';
-                          } else if (value.length < 4) {
-                            return 'at least enter 4 characters';
-                          } else if (value.length > 13) {
-                            return 'maximum character is 13';
+                          String pattern =
+                              r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                              r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                              r"{0,253}[a-zA-Z0-9])?)*$";
+                          RegExp regExp = RegExp(pattern);
+                          if (value!.isEmpty) {
+                            return 'Email is required';
+                          } else if (!regExp.hasMatch(value)) {
+                            return 'Invalid Email';
                           }
                           return null;
                         },
@@ -109,17 +114,17 @@ class _LoginViewState extends State<LoginView> {
                             () => TextFormField(
                           style: kTextFormFieldStyle(),
                           controller: passwordController,
-                          obscureText: simpleUIController.isObscure.value,
+                          obscureText: authUIController.isObscure.value,
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.lock_open),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                simpleUIController.isObscure.value
+                                authUIController.isObscure.value
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
                               onPressed: () {
-                                simpleUIController.isObscureActive();
+                                authUIController.isObscureActive();
                               },
                             ),
                             hintText: 'Password',
@@ -131,7 +136,7 @@ class _LoginViewState extends State<LoginView> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter some text';
-                            } else if (value.length < 7) {
+                            } else if (value.length < 6) {
                               return 'at least enter 6 characters';
                             } else if (value.length > 13) {
                               return 'maximum character is 13';
@@ -158,15 +163,18 @@ class _LoginViewState extends State<LoginView> {
                         height: size.height * 0.03,
                       ),
 
-                      /// Navigate To Login Screen
                       GestureDetector(
                         onTap: () {
-                          Navigator.pop(context);
-                          nameController.clear();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpView()
+                            )
+                          );
                           emailController.clear();
                           passwordController.clear();
                           _formKey.currentState?.reset();
-                          simpleUIController.isObscure.value = true;
+                          authUIController.isObscure.value = true;
                         },
                         child: RichText(
                           text: TextSpan(
@@ -215,10 +223,15 @@ class _LoginViewState extends State<LoginView> {
             ),
           ),
         ),
-        onPressed: () {
+        onPressed: () async {
           // Validate returns true if the form is valid, or false otherwise.
           if (_formKey.currentState!.validate()) {
-            // ... Navigate To your Home Page
+            if ((await AuthController().login(
+                emailController.text,
+                passwordController.text))
+            ) {
+              Get.offAll(const HomeView());
+            }
           }
         },
         child: const Text('Login',

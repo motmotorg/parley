@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:parley/constant.dart';
-import 'package:parley/controllers/simple_ui_controller.dart';
+import 'package:parley/controllers/auth_controller.dart';
+import 'package:parley/controllers/auth_ui_controller.dart';
 import 'package:parley/screens/auth/login_view.dart';
+import 'package:parley/screens/home/home_view.dart';
 
 
 class SignUpView extends StatefulWidget {
@@ -30,12 +32,11 @@ class _SignUpViewState extends State<SignUpView> {
     super.dispose();
   }
 
-  SimpleUIController simpleUIController = Get.put(SimpleUIController());
-
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     var theme = Theme.of(context);
+    AuthUIController authUIController = Get.find<AuthUIController>();
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -123,10 +124,15 @@ class _SignUpViewState extends State<SignUpView> {
                           ),
                           // The validator receives the text that the user has entered.
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter email';
-                            } else if (!value.endsWith('@email.com')) {
-                              return 'please enter valid gmail';
+                            String pattern =
+                                r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                                r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+                                r"{0,253}[a-zA-Z0-9])?)*$";
+                            RegExp regExp = RegExp(pattern);
+                            if (value!.isEmpty) {
+                              return 'Email is required';
+                            } else if (!regExp.hasMatch(value)) {
+                              return 'Invalid Email';
                             }
                             return null;
                           },
@@ -140,17 +146,17 @@ class _SignUpViewState extends State<SignUpView> {
                               () => TextFormField(
                             style: kTextFormFieldStyle(),
                             controller: passwordController,
-                            obscureText: simpleUIController.isObscure.value,
+                            obscureText: authUIController.isObscure.value,
                             decoration: InputDecoration(
                               prefixIcon: const Icon(Icons.lock_open),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  simpleUIController.isObscure.value
+                                  authUIController.isObscure.value
                                       ? Icons.visibility
                                       : Icons.visibility_off,
                                 ),
                                 onPressed: () {
-                                  simpleUIController.isObscureActive();
+                                  authUIController.isObscureActive();
                                 },
                               ),
                               hintText: 'Password',
@@ -162,7 +168,7 @@ class _SignUpViewState extends State<SignUpView> {
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter some text';
-                              } else if (value.length < 7) {
+                              } else if (value.length < 6) {
                                 return 'at least enter 6 characters';
                               } else if (value.length > 13) {
                                 return 'maximum character is 13';
@@ -192,16 +198,13 @@ class _SignUpViewState extends State<SignUpView> {
                         /// Navigate To Login Screen
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                    builder: (ctx) => const LoginView()));
+                            Navigator.pop(context);
                             nameController.clear();
                             emailController.clear();
                             passwordController.clear();
                             _formKey.currentState?.reset();
 
-                            simpleUIController.isObscure.value = true;
+                            authUIController.isObscure.value = true;
                           },
                           child: RichText(
                             text: TextSpan(
@@ -243,10 +246,16 @@ class _SignUpViewState extends State<SignUpView> {
             ),
           ),
         ),
-        onPressed: () {
+        onPressed: () async {
           // Validate returns true if the form is valid, or false otherwise.
           if (_formKey.currentState!.validate()) {
-            // ... Navigate To your Home Page
+            if ((await AuthController().signUp(
+                username: nameController.text,
+                email: emailController.text,
+                password: passwordController.text))
+            ) {
+              Get.offAll(const HomeView());
+            }
           }
         },
         child: const Text('Sign up',

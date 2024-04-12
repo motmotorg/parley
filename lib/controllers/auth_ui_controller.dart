@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-class SimpleUIController extends GetxController {
+class AuthUIController extends GetxController {
   RxBool isObscure = true.obs;
 
   isObscureActive() {
